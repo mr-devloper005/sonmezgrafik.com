@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, Filter, Search } from 'lucide-react'
 import { buildPageMetadata } from '@/lib/seo'
@@ -10,8 +10,11 @@ import type { SitePost } from '@/lib/site-connector'
 import { EditableSiteShell } from '@/editable/shell/EditableSiteShell'
 import { toPlainText } from '@/editable/cards/PostCards'
 import { pagesContent } from '@/editable/content/pages.content'
+import { isUiHiddenTask } from '@/editable/content/global.content'
+import { Ads, getSlotSizes } from '@/lib/ads'
 
 export const revalidate = 3
+const pickRandom = (sizes: string[]) => sizes[Math.floor(Math.random() * sizes.length)]
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
@@ -33,7 +36,7 @@ const getImage = (post: SitePost) => {
 const compactRaw = (value: unknown) => typeof value === 'string' ? value.trim() : ''
 const summaryOf = (post: SitePost) => {
   const content = getContent(post)
-  // compactRaw only trims — it does NOT strip HTML — so the raw payload could leak markup
+  // compactRaw only trims â€” it does NOT strip HTML â€” so the raw payload could leak markup
   // into the card summary. Route every candidate through toPlainText so cards stay plain,
   // and fall back to the article body when there's no dedicated summary/description.
   return toPlainText(
@@ -67,7 +70,7 @@ function SearchResultCard({ post, index }: { post: SitePost; index: number }) {
   const href = `${taskRoute || `/${task || 'article'}`}/${post.slug}`
   const image = getImage(post)
   const summary = summaryOf(post)
-  const taskLabel = SITE_CONFIG.tasks.find((item) => item.key === task)?.label || 'Post'
+  const taskLabel = task === 'sbm' ? 'Find' : SITE_CONFIG.tasks.find((item) => item.key === task)?.label || 'Resource'
   const strong = index % 5 === 0
 
   return (
@@ -97,9 +100,12 @@ export default async function SearchPage({ searchParams }: { searchParams?: Prom
   const task = (resolved.task || '').trim().toLowerCase()
   const useMaster = resolved.master !== '0'
   const feed = await fetchSiteFeed(useMaster ? 1000 : 300, useMaster ? { fresh: true, category: category || undefined, task: task || undefined } : undefined)
-  const posts = feed?.posts?.length ? feed.posts : useMaster ? [] : SITE_CONFIG.tasks.filter((item) => item.enabled).flatMap((item) => getMockPostsForTask(item.key))
-  const results = posts.filter((post) => matches(post, normalized, category, task)).slice(0, normalized ? 80 : 36)
-  const enabledTasks = SITE_CONFIG.tasks.filter((item) => item.enabled)
+  const posts = feed?.posts?.length ? feed.posts : useMaster ? [] : SITE_CONFIG.tasks.filter((item) => item.enabled && item.key === 'sbm' && !isUiHiddenTask(item.key)).flatMap((item) => getMockPostsForTask(item.key))
+  const results = posts.filter((post) => {
+    const resultTask = getPostTaskKey(post)
+    return resultTask === 'sbm' && !isUiHiddenTask(resultTask) && matches(post, normalized, category, task)
+  }).slice(0, normalized ? 80 : 36)
+  const enabledTasks = SITE_CONFIG.tasks.filter((item) => item.enabled && item.key === 'sbm' && !isUiHiddenTask(item.key))
 
   return (
     <EditableSiteShell>
@@ -123,8 +129,8 @@ export default async function SearchPage({ searchParams }: { searchParams?: Prom
                   <input name="category" defaultValue={category} placeholder="Category" className="min-w-0 flex-1 bg-transparent text-sm font-bold outline-none placeholder:text-current/35" />
                 </label>
                 <select name="task" defaultValue={task} className="rounded-2xl border border-[var(--editable-border)] bg-white px-4 py-3 text-sm font-black outline-none">
-                  <option value="">All content types</option>
-                  {enabledTasks.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}
+                  <option value="">All collections</option>
+                  {enabledTasks.map((item) => <option key={item.key} value={item.key}>{item.key === 'sbm' ? 'Finds' : item.label}</option>)}
                 </select>
               </div>
               <button className="mt-3 inline-flex h-12 w-full items-center justify-center rounded-2xl bg-[var(--editable-page-text,#2f1d16)] px-6 text-sm font-black uppercase tracking-[0.18em] text-[var(--editable-page-bg,#fff7ee)] transition hover:-translate-y-0.5" type="submit">Search</button>
@@ -134,9 +140,9 @@ export default async function SearchPage({ searchParams }: { searchParams?: Prom
           <div className="mt-10 flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.24em] opacity-50">{results.length} results</p>
-              <h2 className="mt-2 text-3xl font-black tracking-[-0.06em]">{query ? `Results for “${query}”` : pagesContent.search.resultsTitle}</h2>
+              <h2 className="mt-2 text-3xl font-black tracking-[-0.06em]">{query ? `Results for â€œ${query}â€` : pagesContent.search.resultsTitle}</h2>
             </div>
-            <Link href="/article" className="inline-flex items-center gap-2 rounded-full border border-[var(--editable-border)] bg-white px-5 py-3 text-sm font-black">Browse latest <ArrowRight className="h-4 w-4" /></Link>
+            <Link href="/sbm" className="inline-flex items-center gap-2 rounded-full border border-[var(--editable-border)] bg-white px-5 py-3 text-sm font-black">Browse latest <ArrowRight className="h-4 w-4" /></Link>
           </div>
 
           {results.length ? (
@@ -145,12 +151,14 @@ export default async function SearchPage({ searchParams }: { searchParams?: Prom
             </div>
           ) : (
             <div className="mt-8 rounded-[2rem] border border-dashed border-[var(--editable-border)] bg-white/70 p-10 text-center">
-              <p className="text-2xl font-black tracking-[-0.04em]">No matching posts found.</p>
-              <p className="mt-3 text-sm font-semibold opacity-60">Try a different keyword, task type, or category.</p>
+              <p className="text-2xl font-black tracking-[-0.04em]">No matching resources found.</p>
+              <p className="mt-3 text-sm font-semibold opacity-60">Try a different keyword, collection, or category.</p>
             </div>
           )}
+          <Ads slot="footer" size={pickRandom(getSlotSizes('footer'))} showLabel className="mt-12" />
         </section>
       </main>
     </EditableSiteShell>
   )
 }
+

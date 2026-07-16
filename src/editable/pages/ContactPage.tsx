@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { Building2, FileText, Image as ImageIcon, Mail, MapPin, Phone, Sparkles, Bookmark } from 'lucide-react'
 import { pagesContent } from '@/editable/content/pages.content'
@@ -40,7 +40,7 @@ function getLanes(kind: ReturnType<typeof getProductKind>) {
   return [
     { icon: Bookmark, title: 'Collection submissions', body: 'Suggest resources, boards, and links that deserve a place in the library.' },
     { icon: Mail, title: 'Resource partnerships', body: 'Coordinate curation projects, reference pages, and link programs.' },
-    { icon: Sparkles, title: 'Curator support', body: 'Need help organizing shelves, collections, or profile-connected boards?' },
+    { icon: Sparkles, title: 'Curator support', body: 'Need help organizing shelves, collections, or resource-connected boards?' },
   ]
 }
 
@@ -51,29 +51,42 @@ export default function ContactPage() {
 
   return (
     <EditableSiteShell className={tone.shell}>
-      <main className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        <section className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--slot4-accent)]">{pagesContent.contact.eyebrow}</p>
-            <h1 className="editable-display mt-4 text-5xl font-semibold tracking-[-0.02em]">{pagesContent.contact.title}</h1>
-            <p className={`mt-5 max-w-2xl text-sm leading-8 ${tone.muted}`}>{pagesContent.contact.description}</p>
-            <div className="mt-8 space-y-4">
+      <main>
+        <section className="relative overflow-hidden bg-[var(--slot4-warm)]">
+          <div className="absolute inset-y-0 left-0 hidden w-24 bg-[var(--slot4-accent)] lg:block" />
+          <div className="mx-auto grid max-w-[var(--editable-container)] gap-8 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
+            <div className="relative">
+              <p className="text-xs font-black uppercase tracking-[0.24em] text-[var(--slot4-accent)]">{pagesContent.contact.eyebrow}</p>
+              <h1 className="editable-display mt-4 max-w-2xl text-[clamp(3rem,7vw,6.25rem)] font-black uppercase leading-[.84] tracking-normal text-[var(--slot4-accent)]">{pagesContent.contact.title}</h1>
+              <p className={`mt-6 max-w-2xl text-lg font-semibold leading-8 ${tone.muted}`}>{pagesContent.contact.description}</p>
+              <div className="mt-8 grid gap-4">
               {lanes.map((lane) => (
-                <div key={lane.title} className={`rounded-sm p-5 ${tone.soft}`}>
-                  <lane.icon className="h-5 w-5 text-[var(--slot4-accent)]" />
-                  <h2 className="editable-display mt-3 text-xl font-semibold">{lane.title}</h2>
-                  <p className={`mt-2 text-sm leading-7 ${tone.muted}`}>{lane.body}</p>
+                <div key={lane.title} className={`rounded-[1.5rem] p-5 shadow-[0_6px_0_rgba(32,25,22,0.05)] ${tone.soft}`}>
+                  <div className="flex gap-4">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[1rem] bg-[var(--slot4-accent)] text-[var(--slot4-on-accent)]">
+                      <lane.icon className="h-5 w-5" />
+                    </span>
+                    <div>
+                      <h2 className="editable-display text-2xl font-black uppercase leading-[.9] text-[var(--slot4-page-text)]">{lane.title}</h2>
+                      <p className={`mt-2 text-sm font-semibold leading-7 ${tone.muted}`}>{lane.body}</p>
+                    </div>
+                  </div>
                 </div>
               ))}
+              </div>
             </div>
-          </div>
 
-          <div className={`rounded-sm p-7 ${tone.panel}`}>
-            <h2 className="editable-display text-2xl font-semibold">{pagesContent.contact.formTitle}</h2>
-            <EditableContactLeadForm />
+            <div className={`overflow-hidden rounded-[2rem] p-6 shadow-[0_14px_0_rgba(32,25,22,0.08)] sm:p-8 ${tone.panel}`}>
+              <div className="rounded-[1.5rem] bg-[var(--slot4-accent)] p-6 text-[var(--slot4-on-accent)]">
+                <p className="text-xs font-black uppercase tracking-[0.2em] opacity-80">Send a note</p>
+                <h2 className="editable-display mt-3 text-4xl font-black uppercase leading-[.86]">{pagesContent.contact.formTitle}</h2>
+              </div>
+              <EditableContactLeadForm />
+            </div>
           </div>
         </section>
       </main>
     </EditableSiteShell>
   )
 }
+
