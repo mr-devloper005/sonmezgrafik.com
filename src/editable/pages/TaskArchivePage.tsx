@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { ArrowUpRight, BriefcaseBusiness, ChevronDown, Download, FileText, Globe, MapPin, Phone, Search, Star, UserRound } from 'lucide-react'
 import { buildTaskMetadata } from '@/lib/seo'
 import { CATEGORY_OPTIONS, normalizeCategory } from '@/lib/categories'
@@ -9,8 +9,10 @@ import { taskPageMetadata } from '@/config/site.content'
 import { taskPageVoices } from '@/editable/content/task-pages.content'
 import { EditableSiteShell } from '@/editable/shell/EditableSiteShell'
 import { getTaskTheme, taskThemeStyle } from '@/editable/theme/task-themes'
+import { Ads, getSlotSizes } from '@/lib/ads'
 
 export const revalidate = 3
+const pickRandom = (sizes: string[]) => sizes[Math.floor(Math.random() * sizes.length)]
 
 export const taskMetadata = (task: TaskKey, path: string) =>
   buildTaskMetadata(task, {
@@ -35,7 +37,7 @@ const getImages = (post: SitePost) => {
 const placeholder = '/placeholder.svg?height=900&width=1200'
 const getImage = (post: SitePost) => getImages(post)[0] || placeholder
 const getCategory = (post: SitePost, fallback: string) => asText(getContent(post).category) || post.tags?.[0] || fallback
-// Reduce any content payload — rich HTML, entity-encoded HTML, or plain text — to a clean
+// Reduce any content payload â€” rich HTML, entity-encoded HTML, or plain text â€” to a clean
 // plain-text card summary. Two tag-strip passes (before + after entity decode) also catch
 // entity-encoded markup like &lt;p&gt; so category/archive cards never show raw markup.
 const stripHtml = (value: string) => value
@@ -110,15 +112,15 @@ export function TaskArchiveView({ task, posts, pagination, category, basePath }:
   return (
     <EditableSiteShell>
       <main style={taskThemeStyle(task)} className="min-h-screen bg-[var(--tk-bg)] text-[var(--tk-text)]">
-        <header className="relative overflow-hidden border-b border-[var(--tk-line)]">
+        <header className="relative overflow-hidden border-b border-[var(--tk-line)] bg-[var(--tk-raised)]">
           <div className="pointer-events-none absolute inset-x-0 -top-40 h-96 bg-[radial-gradient(60%_60%_at_50%_0%,var(--tk-glow),transparent_70%)]" />
           <div className="relative mx-auto max-w-[var(--editable-container)] px-6 py-20 sm:py-28 lg:px-8">
-            <div className="flex items-center gap-3 text-[11px] font-medium uppercase tracking-[0.34em] text-[var(--tk-accent)]">
+            <div className="flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.18em] text-[var(--tk-accent)]">
               <span>{theme.kicker}</span>
               <span className="h-1 w-1 rounded-full bg-[var(--tk-accent)] opacity-50" />
               <span className="text-[var(--tk-muted)]">{label}</span>
             </div>
-            <h1 className="editable-display mt-6 max-w-3xl text-balance text-[2.5rem] font-semibold leading-[1.06] tracking-[-0.03em] sm:text-5xl lg:text-6xl">
+            <h1 className="editable-display mt-6 max-w-4xl text-balance text-5xl font-black uppercase leading-[.86] tracking-normal text-[var(--tk-accent)] sm:text-6xl lg:text-7xl">
               {voice?.headline || `Browse ${label}`}
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-[var(--tk-muted)]">{voice?.description || theme.note}</p>
@@ -132,7 +134,7 @@ export function TaskArchiveView({ task, posts, pagination, category, basePath }:
 
             <div className="mt-12 flex flex-col gap-4 border-t border-[var(--tk-line)] pt-6 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-[var(--tk-muted)]">
-                <span className="font-semibold text-[var(--tk-text)]">{posts.length}</span> {posts.length === 1 ? 'post' : 'posts'} · {categoryLabel}
+                <span className="font-semibold text-[var(--tk-text)]">{posts.length}</span> {posts.length === 1 ? 'resource' : 'resources'} Â· {categoryLabel}
               </p>
               <form action={basePath} className="flex items-center gap-2.5">
                 <div className="relative">
@@ -161,8 +163,8 @@ export function TaskArchiveView({ task, posts, pagination, category, basePath }:
           ) : (
             <div className="mx-auto max-w-xl rounded-[var(--tk-radius)] border border-dashed border-[var(--tk-line)] bg-[var(--tk-surface)] px-8 py-16 text-center">
               <Search className="mx-auto h-7 w-7 text-[var(--tk-muted)]" />
-              <h2 className="editable-display mt-5 text-2xl font-semibold tracking-[-0.02em]">Nothing here yet</h2>
-              <p className="mt-2 text-sm leading-6 text-[var(--tk-muted)]">Try another category, or check back after new {label.toLowerCase()} are published.</p>
+              <h2 className="editable-display mt-5 text-2xl font-semibold tracking-[-0.02em]">No finds on this shelf yet</h2>
+              <p className="mt-2 text-sm leading-6 text-[var(--tk-muted)]">Try another category, or check back after new resources are added.</p>
             </div>
           )}
 
@@ -173,6 +175,7 @@ export function TaskArchiveView({ task, posts, pagination, category, basePath }:
               {pagination.hasNextPage ? <Link href={pageHref(basePath, category, page + 1)} className="rounded-full border border-[var(--tk-line)] px-5 py-2.5 font-medium transition hover:border-[var(--tk-accent)]">Next</Link> : null}
             </nav>
           ) : null}
+          {task === 'sbm' ? <Ads slot="in-feed" size={pickRandom(getSlotSizes('in-feed'))} showLabel className="mt-12" /> : null}
         </section>
       </main>
     </EditableSiteShell>
@@ -199,7 +202,7 @@ function CardArrow({ label }: { label: string }) {
   )
 }
 
-// Yelp-style red star ratings. Prefers real rating/review fields, falls back to
+// Trust markers prefer real rating/review fields, falling back to
 // a stable derived value so the UI always reads well (wire to real data later).
 const hashStr = (value: string) => {
   let h = 0
@@ -244,12 +247,12 @@ function ArticleArchiveCard({ post, href, index }: { post: SitePost; href: strin
       <div className="p-6 sm:p-7">
         <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--tk-accent)]">
           <span>{category}</span>
-          <span className="text-[var(--tk-muted)]">· No. {String(index + 1).padStart(2, '0')}</span>
+          <span className="text-[var(--tk-muted)]">Â· No. {String(index + 1).padStart(2, '0')}</span>
         </div>
         <h2 className="editable-display mt-3 text-2xl font-semibold leading-snug tracking-[-0.02em]">{post.title}</h2>
         <RatingLine post={post} />
         <p className="mt-3 line-clamp-2 text-[15px] leading-7 text-[var(--tk-muted)]">{getSummary(post)}</p>
-        <CardArrow label="Read article" />
+        <CardArrow label="Open resource" />
       </div>
     </Link>
   )
@@ -320,14 +323,14 @@ function ImageArchiveCard({ post, href, index }: { post: SitePost; href: string;
 function BookmarkArchiveCard({ post, href, index }: { post: SitePost; href: string; index: number }) {
   const website = getField(post, ['website', 'url', 'link'])
   return (
-    <Link href={href} className={`${cardBase} flex gap-4 p-6`}>
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--tk-accent-soft)] text-[var(--tk-accent)]">
+    <Link href={href} className={`${cardBase} flex overflow-hidden p-6`}>
+      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.2rem] bg-[var(--tk-accent)] text-white shadow-[0_6px_0_rgba(32,25,22,0.1)]">
         <Globe className="h-5 w-5" />
       </div>
-      <div className="min-w-0 flex-1">
+      <div className="ml-4 min-w-0 flex-1 overflow-hidden">
         <span className="text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--tk-muted)]">Saved · {String(index + 1).padStart(2, '0')}</span>
-        <h2 className="editable-display mt-1.5 text-lg font-semibold leading-snug tracking-[-0.02em]">{post.title}</h2>
-        <p className="mt-2 line-clamp-2 text-sm leading-6 text-[var(--tk-muted)]">{getSummary(post)}</p>
+        <h2 className="editable-display mt-2 line-clamp-4 max-w-full break-words text-2xl font-black uppercase leading-[.9] tracking-normal [overflow-wrap:anywhere]">{post.title}</h2>
+        <p className="mt-2 line-clamp-2 max-w-full break-words text-sm leading-6 text-[var(--tk-muted)] [overflow-wrap:anywhere]">{getSummary(post)}</p>
         {website ? <p className="mt-3 truncate text-xs font-medium text-[var(--tk-accent)]">{cleanDomain(website)}</p> : null}
       </div>
     </Link>
@@ -365,3 +368,4 @@ function ProfileArchiveCard({ post, href }: { post: SitePost; href: string }) {
     </Link>
   )
 }
+
